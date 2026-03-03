@@ -4,7 +4,11 @@ from pydantic import BaseModel
 from typing import List
 from sqlalchemy.exc import IntegrityError
 
-SECRET_KEY = os.environ["SECRET_KEY"]
+SECRET_KEY = os.environ.get("SECRET_KEY")
+
+print("TYPE SECRET_KEY =", type(SECRET_KEY))
+print("VALUE SECRET_KEY =", SECRET_KEY)
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 print("DEBUG SECRET_KEY =", SECRET_KEY)
