@@ -3,6 +3,8 @@ from pydantic import BaseModel
 from typing import List
 from sqlalchemy.exc import IntegrityError
 
+SECRET_KEY = os.environ["SECRET_KEY"]
+
 from database import engine, SessionLocal, Base
 from models import Measurement, Device
 
