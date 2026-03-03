@@ -1,9 +1,12 @@
 from fastapi import FastAPI
+import os
 from pydantic import BaseModel
 from typing import List
 from sqlalchemy.exc import IntegrityError
 
 SECRET_KEY = os.environ["SECRET_KEY"]
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 print("DEBUG SECRET_KEY =", SECRET_KEY)
 
 
@@ -20,7 +23,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 app = FastAPI()
 
-import os
+
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 
