@@ -159,18 +159,3 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 from sqlalchemy import text
 
-@app.get("/admin/add-role-column")
-def add_role_column():
-    db = SessionLocal()
-
-    try:
-        db.execute(text("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'"))
-        db.commit()
-        return {"status": "role column added"}
-    
-    except Exception as e:
-        db.rollback()
-        return {"error": str(e)}
-
-    finally:
-        db.close()
