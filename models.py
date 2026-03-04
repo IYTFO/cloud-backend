@@ -41,4 +41,7 @@ class User(Base):
     email = Column(String, unique=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     client_id = Column(Integer, nullable=False)
+
+    role = Column(String, default="user")
+
     created_at = Column(DateTime, default=datetime.utcnow)
