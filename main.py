@@ -5,6 +5,8 @@ from typing import List
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import text
 
+from security import hash_password, verify_password
+
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
 print("TYPE SECRET_KEY =", type(SECRET_KEY))
@@ -35,7 +37,6 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 # 🔥 IMPORTANT : crée les tables automatiquement
@@ -57,14 +58,15 @@ class BatchRequest(BaseModel):
 def receive_batch(batch: BatchRequest):
     db = SessionLocal()
     
+
     device = db.query(Device).filter(Device.device_token == batch.device_token).first()
-    client_id = device.client_id
 
     if not device:
         db.close()
         print("Device inconnu :", batch.device_token)
         return {"success": False, "error": "Invalid device token"}
 
+    client_id = device.client_id
 
     inserted = 0
 
@@ -94,13 +96,6 @@ def receive_batch(batch: BatchRequest):
     return {"success": True}
 
 
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-def get_password_hash(password: str):
-    return pwd_context.hash(password)
-
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
@@ -118,12 +113,14 @@ def create_user_once():
         db.delete(existing)
         db.commit()
 
-    hashed = pwd_context.hash("admin123")
+
+    hashed = hash_password("admin123")
 
     user = User(
         email="admin@test.com",
         hashed_password=hashed,
-        client_id=1
+        client_id=1,
+        role="admin"
     )
 
     db.add(user)
