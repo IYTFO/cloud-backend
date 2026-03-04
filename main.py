@@ -194,3 +194,19 @@ def admin_test(user = Depends(require_admin)):
         "message": "Admin access granted",
         "user": user
     }
+
+
+@app.get("/admin/make-me-admin")
+def make_me_admin():
+    db = SessionLocal()
+
+    user = db.query(User).filter(User.email == "admin@test.com").first()
+
+    if not user:
+        return {"error": "user not found"}
+
+    user.role = "admin"
+    db.commit()
+    db.close()
+
+    return {"message": "User is now admin"}
