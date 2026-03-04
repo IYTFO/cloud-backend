@@ -155,3 +155,11 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
     return {"access_token": access_token, "token_type": "bearer"}
 
+
+@app.get("/admin/add-role-column")
+def add_role_column():
+    db = SessionLocal()
+    db.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'")
+    db.commit()
+    db.close()
+    return {"status": "role column added"}
