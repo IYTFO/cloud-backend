@@ -148,7 +148,11 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     access_token = create_access_token(
-        data={"sub": user.email, "client_id": user.client_id},
+        data={
+            "sub": user.email,
+            "client_id": user.client_id,
+            "role": user.role
+        },
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
     )
 
@@ -159,3 +163,34 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 from sqlalchemy import text
 
+
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+
+        user = {
+            "email": payload.get("sub"),
+            "client_id": payload.get("client_id"),
+            "role": payload.get("role")
+        }
+
+        return user
+
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+def require_admin(user = Depends(get_current_user)):
+    
+    if user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    return user
+
+@app.get("/admin/test")
+def admin_test(user = Depends(require_admin)):
+
+    return {
+        "message": "Admin access granted",
+        "user": user
+    }
