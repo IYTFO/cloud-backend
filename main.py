@@ -3,6 +3,7 @@ import os
 from pydantic import BaseModel
 from typing import List
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import text
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
@@ -156,10 +157,20 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
     return {"access_token": access_token, "token_type": "bearer"}
 
 
+from sqlalchemy import text
+
 @app.get("/admin/add-role-column")
 def add_role_column():
     db = SessionLocal()
-    db.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'")
-    db.commit()
-    db.close()
-    return {"status": "role column added"}
+
+    try:
+        db.execute(text("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'"))
+        db.commit()
+        return {"status": "role column added"}
+    
+    except Exception as e:
+        db.rollback()
+        return {"error": str(e)}
+
+    finally:
+        db.close()
