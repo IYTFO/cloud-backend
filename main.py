@@ -295,14 +295,14 @@ def list_clients(user=Depends(require_admin)):
 def get_measurements(
     point_id: int,
     limit: int = 500,
-    user=Depends(get_current_user)
+    #user=Depends(get_current_user)
 ):
 
     db = SessionLocal()
 
     measurements = db.query(Measurement).filter(
         Measurement.point_id == point_id,
-        Measurement.client_id == user["client_id"]
+        #Measurement.client_id == user["client_id"]
     ).order_by(
         Measurement.timestamp.desc()
     ).limit(limit).all()
