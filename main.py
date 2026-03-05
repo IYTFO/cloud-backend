@@ -18,9 +18,8 @@ print("DEBUG SECRET_KEY =", SECRET_KEY)
 
 
 from database import engine, SessionLocal, Base
-from models import Measurement, Device
+from models import Measurement, Device, User, Client
 
-from models import User
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -48,10 +47,40 @@ class MeasurementSchema(BaseModel):
     value: float
     timestamp: str
 
+class ClientCreate(BaseModel):
+    name: str
 
 class BatchRequest(BaseModel):
     device_token: str
     measurements: List[MeasurementSchema]
+
+
+@app.post("/admin/create-client")
+def create_client(data: ClientCreate, user=Depends(require_admin)):
+
+    db = SessionLocal()
+
+    existing = db.query(Client).filter(Client.name == data.name).first()
+
+    if existing:
+        db.close()
+        raise HTTPException(status_code=400, detail="Client already exists")
+
+    client = Client(
+        name=data.name
+    )
+
+    db.add(client)
+    db.commit()
+
+    db.refresh(client)
+
+    db.close()
+
+    return {
+        "message": "Client created",
+        "client_id": client.id
+    }
 
 
 @app.post("/api/measurements/batch")
