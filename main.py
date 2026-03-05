@@ -55,34 +55,6 @@ class BatchRequest(BaseModel):
     measurements: List[MeasurementSchema]
 
 
-@app.post("/admin/create-client")
-def create_client(data: ClientCreate, user=Depends(require_admin)):
-
-    db = SessionLocal()
-
-    existing = db.query(Client).filter(Client.name == data.name).first()
-
-    if existing:
-        db.close()
-        raise HTTPException(status_code=400, detail="Client already exists")
-
-    client = Client(
-        name=data.name
-    )
-
-    db.add(client)
-    db.commit()
-
-    db.refresh(client)
-
-    db.close()
-
-    return {
-        "message": "Client created",
-        "client_id": client.id
-    }
-
-
 @app.post("/api/measurements/batch")
 def receive_batch(batch: BatchRequest):
     db = SessionLocal()
@@ -224,6 +196,8 @@ def admin_test(user = Depends(require_admin)):
 
 @app.get("/admin/make-me-admin")
 def make_me_admin():
+    
+    
     db = SessionLocal()
 
     user = db.query(User).filter(User.email == "admin@test.com").first()
@@ -236,3 +210,30 @@ def make_me_admin():
     db.close()
 
     return {"message": "User is now admin"}
+
+
+@app.post("/admin/create-client")
+def create_client(data: ClientCreate, user=Depends(require_admin)):
+
+    db = SessionLocal()
+
+    existing = db.query(Client).filter(Client.name == data.name).first()
+
+    if existing:
+        db.close()
+        raise HTTPException(status_code=400, detail="Client already exists")
+
+    client = Client(
+        name=data.name
+    )
+
+    db.add(client)
+    db.commit()
+    db.refresh(client)
+
+    db.close()
+
+    return {
+        "message": "Client created",
+        "client_id": client.id
+    }
