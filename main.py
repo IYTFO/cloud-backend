@@ -47,9 +47,14 @@ class MeasurementSchema(BaseModel):
     value: float
     timestamp: str
 
+class DeviceCreate(BaseModel):
+    name: str
+    device_token: str
+    client_id: int
+
 class ClientCreate(BaseModel):
     name: str
-
+    
 class BatchRequest(BaseModel):
     device_token: str
     measurements: List[MeasurementSchema]
@@ -159,7 +164,6 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-from sqlalchemy import text
 
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
@@ -238,52 +242,34 @@ def make_me_admin():
     return {"message": "User is now admin"}
 
 
-@app.post("/admin/create-client")
-def create_client(data: ClientCreate, user=Depends(require_admin)):
+@app.post("/admin/create-device")
+def create_device(data: DeviceCreate, user=Depends(require_admin)):
 
     db = SessionLocal()
 
-    existing = db.query(Client).filter(Client.name == data.name).first()
+    existing = db.query(Device).filter(Device.device_token == data.device_token).first()
 
     if existing:
         db.close()
-        raise HTTPException(status_code=400, detail="Client already exists")
+        raise HTTPException(status_code=400, detail="Device already exists")
 
-    client = Client(
-        name=data.name
+    device = Device(
+        name=data.name,
+        device_token=data.device_token,
+        client_id=data.client_id
     )
 
-    db.add(client)
+    db.add(device)
     db.commit()
-    db.refresh(client)
+    db.refresh(device)
 
     db.close()
 
     return {
-        "message": "Client created",
-        "client_id": client.id
+        "message": "Device created",
+        "device_id": device.id
     }
-    
-@app.get("/admin/clients")
-def list_clients(user=Depends(require_admin)):
-
-    db = SessionLocal()
-
-    clients = db.query(Client).all()
-
-    result = []
-
-    for c in clients:
-        result.append({
-            "id": c.id,
-            "name": c.name,
-            "created_at": c.created_at
-        })
-
-    db.close()
-
-    return result
-
+  
     
 @app.get("/admin/clients")
 def list_clients(user=Depends(require_admin)):
