@@ -237,3 +237,24 @@ def create_client(data: ClientCreate, user=Depends(require_admin)):
         "message": "Client created",
         "client_id": client.id
     }
+    
+    
+@app.get("/admin/clients")
+def list_clients(user=Depends(require_admin)):
+
+    db = SessionLocal()
+
+    clients = db.query(Client).all()
+
+    result = []
+
+    for c in clients:
+        result.append({
+            "id": c.id,
+            "name": c.name,
+            "created_at": c.created_at
+        })
+
+    db.close()
+
+    return result
