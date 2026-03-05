@@ -185,6 +185,32 @@ def require_admin(user = Depends(get_current_user)):
 
     return user
 
+@app.post("/admin/create-client")
+def create_client(data: ClientCreate, user=Depends(require_admin)):
+
+    db = SessionLocal()
+
+    existing = db.query(Client).filter(Client.name == data.name).first()
+
+    if existing:
+        db.close()
+        raise HTTPException(status_code=400, detail="Client already exists")
+
+    client = Client(
+        name=data.name
+    )
+
+    db.add(client)
+    db.commit()
+    db.refresh(client)
+
+    db.close()
+
+    return {
+        "message": "Client created",
+        "client_id": client.id
+    }
+
 @app.get("/admin/test")
 def admin_test(user = Depends(require_admin)):
 
